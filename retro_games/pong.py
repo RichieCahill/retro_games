@@ -30,12 +30,13 @@ class PongEntityID(EntityID):
 class Paddle(GameEntity, Collidable):
     """A paddle."""
 
-    def __init__(self, x: int, game: Pong, height: int = 4) -> None:
+    def __init__(self, x: int, game: Pong, height: int = 4, *, ai: bool = False) -> None:
         """Init."""
         super().__init__(game.screen)
 
         self.height = height
         self.width = 1
+        self.ai = ai
 
         self.x = self.new_x = x
         self.y = self.new_y = (self.max_y - self.height) // 2
@@ -56,6 +57,23 @@ class Paddle(GameEntity, Collidable):
         for i in range(self.height):
             collision_map.map[self.new_y + i][self.new_x] = self.entity_id
         self.y = self.new_y
+
+    def ai_move(self, game: Pong) -> None:
+        """AI movement logic."""
+        if not self.ai:
+            return
+
+        distension = abs(game.ball.x - self.x)
+        if distension > game.max_x // 12:
+            return
+
+        ball_center = game.ball.y
+        paddle_center = self.y + (self.height // 2)
+
+        if paddle_center < ball_center:
+            self.move(game, Paddle.Direction.DOWN)
+        if paddle_center > ball_center:
+            self.move(game, Paddle.Direction.UP)
 
     class Direction(Enum):
         """A paddle direction."""
@@ -153,7 +171,6 @@ class Ball(GameEntity, Collidable):
 
         if collision == {PongEntityID.PADDLE}:
             self.x_direction *= -1
-
             return
 
         if collision == {PongEntityID.LEFT_WALL}:
@@ -184,8 +201,8 @@ class Pong(Game):
         logging.info(f"{len(self.collision_map.map[0])=}")
 
         # Create game entities
-        self.left_paddle = Paddle(2, self)
-        self.right_paddle = Paddle(self.max_x - 1, self)
+        self.left_paddle = Paddle(2, self, ai=True)
+        self.right_paddle = Paddle(self.max_x - 1, self, ai=True)
         self.ball = Ball(self)
         self.score = Score(screen, self.max_x // 4, 0)
 
@@ -194,8 +211,6 @@ class Pong(Game):
         self.key_map = {
             ord("w"): (self.left_paddle.move, (self, Paddle.Direction.UP)),
             ord("s"): (self.left_paddle.move, (self, Paddle.Direction.DOWN)),
-            ord("i"): (self.right_paddle.move, (self, Paddle.Direction.UP)),
-            ord("k"): (self.right_paddle.move, (self, Paddle.Direction.DOWN)),
             ord("q"): (lambda: 1, ()),
         }
         # Create renderer
@@ -207,8 +222,9 @@ class Pong(Game):
 
     def update(self) -> None:
         """Update the game."""
-        # Update ball
         self.ball.move(self)
+        self.right_paddle.ai_move(self)
+        self.left_paddle.ai_move(self)
 
     def run(self) -> None:
         """Run the game."""
