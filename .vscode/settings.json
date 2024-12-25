@@ -1,6 +1,8 @@
 {
   "cSpell.words": [
+    "addch",
     "addopts",
+    "addstr",
     "celerybeat",
     "Collidable",
     "Connor",
@@ -8,6 +10,7 @@
     "Cython",
     "direnv",
     "dmypy",
+    "getmaxyx",
     "htmlcov",
     "ignorelist",
     "ipynb",
