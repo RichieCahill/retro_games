@@ -53,7 +53,7 @@ class CollisionMap:
         """Check if the object collides with the collision map."""
         if entity.new_x < 0 + 1:
             return {self.MapEntity.LEFT_WALL}
-        if entity.new_x >= self.max_x - entity.width:
+        if entity.new_x >= self.max_x + 1 - entity.width:
             return {self.MapEntity.RIGHT_WALL}
         if entity.new_y < 0 + 1:
             return {self.MapEntity.TOP_WALL}
