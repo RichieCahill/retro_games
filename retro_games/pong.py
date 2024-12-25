@@ -21,15 +21,19 @@ from retro_games.game_components import (
 class Paddle(GameEntity, Collidable):
     """A paddle."""
 
-    def __init__(self, x: int, screen: curses.window, height: int = 4) -> None:
+    def __init__(self, x: int, game: Pong, height: int = 4) -> None:
         """Init."""
-        super().__init__(screen)
-        self.x = x
-        self.new_x = x
+        super().__init__(game.screen)
+
+        self.x = self.new_x = x
+        self.y = self.new_y = (self.max_y - self.height) // 2
+
         self.height = height
         self.width = 1
-        self.y = (self.max_y - self.height) // 2
+
         self.map_entity_type = CollisionMap.MapEntity.PADDLE
+
+        self.update_map(game.collision_map)
 
     def draw(self) -> None:
         """Draw the paddle on the screen."""
@@ -179,8 +183,8 @@ class Pong(Game):
         logging.info(f"{len(self.collision_map.map[0])=}")
 
         # Create game entities
-        self.left_paddle = Paddle(2, screen)
-        self.right_paddle = Paddle(self.max_x - 2, screen)
+        self.left_paddle = Paddle(2, self)
+        self.right_paddle = Paddle(self.max_x - 1, self)
         self.ball = Ball(screen)
         self.score = Score(screen, self.max_x // 4, 0)
 
