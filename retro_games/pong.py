@@ -94,10 +94,16 @@ class Score(GameEntity):
 class Ball(GameEntity, Collidable):
     """A ball."""
 
-    def __init__(self, screen: curses.window) -> None:
+    def __init__(self, game: Pong) -> None:
         """Init."""
-        super().__init__(screen)
-        self.reset()
+        super().__init__(game.screen)
+
+        self.width = 1
+        self.height = 1
+
+        self.map_entity_type = CollisionMap.MapEntity.BALL
+
+        self.reset(game)
 
     def draw(self) -> None:
         """Draw the ball on the screen."""
@@ -110,62 +116,47 @@ class Ball(GameEntity, Collidable):
         self.y = self.new_y
         collision_map.map[self.new_y][self.new_x] = self.map_entity_type
 
-    def reset(self) -> None:
+    def reset(self, game: Pong) -> None:
         """Reset ball to center with random direction."""
-        self.x = self.max_x // 2
-        self.y = self.max_y // 2
+        self.new_x = self.max_x // 2
+        self.new_y = self.max_y // 2
 
-        self.width = 1
-        self.height = 1
+        self.update_map(game.collision_map)
 
-        self.dx = choice([-1, 1])  # noqa: S311
-        self.dy = choice([-1, 1])  # noqa: S311
+        self.x_direction = choice([-1, 1])  # noqa: S311
+        self.y_direction = choice([-1, 1])  # noqa: S311
 
-        self.map_entity_type = CollisionMap.MapEntity.BALL
-
-    def move(self, collision_map: CollisionMap, score: Score) -> tuple[CollisionMap, Score]:
+    def move(self, game: Pong) -> None:
         """Move the ball and handle wall collisions."""
-        self.new_x = self.x + self.dx
-        self.new_y = self.y + self.dy
+        self.new_x = self.x + self.x_direction
+        self.new_y = self.y + self.y_direction
 
-        collision = collision_map.check_collision(self)
+        collision = game.collision_map.check_collision(self)
 
-        if collision == {collision_map.MapEntity.EMPTY}:
-            self.update_map(collision_map)
-            return collision_map, score
+        if collision == {game.collision_map.MapEntity.EMPTY}:
+            self.update_map(game.collision_map)
+            return
 
-        if collision in ({collision_map.MapEntity.BOTTOM_WALL}, {collision_map.MapEntity.TOP_WALL}):
-            self.dy *= -1
-            return collision_map, score
+        if collision in ({game.collision_map.MapEntity.BOTTOM_WALL}, {game.collision_map.MapEntity.TOP_WALL}):
+            self.y_direction *= -1
+            return
 
-        if collision == {collision_map.MapEntity.PADDLE}:
-            self.dx *= -1
+        if collision == {game.collision_map.MapEntity.PADDLE}:
+            self.x_direction *= -1
 
-            return collision_map, score
+            return
 
-        if collision == {collision_map.MapEntity.LEFT_WALL}:
-            score.player_1_score += 1
-            collision_map.map[self.y][self.x] = collision_map.MapEntity.EMPTY
-            self.reset()
-            return collision_map, score
+        if collision == {game.collision_map.MapEntity.LEFT_WALL}:
+            game.score.player_1_score += 1
+            self.reset(game)
+            return
 
-        if collision == {collision_map.MapEntity.RIGHT_WALL}:
-            score.player_2_score += 1
-            collision_map.map[self.y][self.x] = collision_map.MapEntity.EMPTY
-            self.reset()
-            return collision_map, score
+        if collision == {game.collision_map.MapEntity.RIGHT_WALL}:
+            game.score.player_2_score += 1
+            self.reset(game)
+            return
 
         raise CollisionError(collision)
-
-    def check_scoring(self) -> tuple[int, int]:
-        """Check if ball has passed paddles and return scoring info."""
-        if self.x <= 0:
-            self.reset()
-            return 0, 1
-        if self.x >= self.max_x - 1:
-            self.reset()
-            return 1, 0
-        return 0, 0
 
 
 class Pong(Game):
@@ -185,7 +176,7 @@ class Pong(Game):
         # Create game entities
         self.left_paddle = Paddle(2, self)
         self.right_paddle = Paddle(self.max_x - 1, self)
-        self.ball = Ball(screen)
+        self.ball = Ball(self)
         self.score = Score(screen, self.max_x // 4, 0)
 
         self.entities = [self.left_paddle, self.right_paddle, self.ball, self.score]
@@ -207,7 +198,7 @@ class Pong(Game):
     def update(self) -> None:
         """Update the game."""
         # Update ball
-        self.collision_map, self.score = self.ball.move(self.collision_map, self.score)
+        self.ball.move(self)
 
     def run(self) -> None:
         """Run the game."""
