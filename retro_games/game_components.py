@@ -97,10 +97,6 @@ class GameEntity(ABC):
     def draw(self) -> None:
         """Draw the entity on the screen."""
 
-    def is_within_bounds(self, y: int) -> bool:
-        """Check if a y position is within screen bounds."""
-        return 1 <= y <= self.max_y - 2
-
 
 class Game:
     """A game."""
