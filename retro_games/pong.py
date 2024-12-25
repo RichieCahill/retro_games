@@ -12,10 +12,19 @@ from retro_games.game_components import (
     Collidable,
     CollisionError,
     CollisionMap,
+    EntityID,
     Game,
     GameEntity,
     Renderer,
 )
+
+
+class PongEntityID(EntityID):
+    """A pong entity id."""
+
+    PADDLE = 5
+    BALL = 6
+    SCORE = 7
 
 
 class Paddle(GameEntity, Collidable):
@@ -25,13 +34,13 @@ class Paddle(GameEntity, Collidable):
         """Init."""
         super().__init__(game.screen)
 
-        self.x = self.new_x = x
-        self.y = self.new_y = (self.max_y - self.height) // 2
-
         self.height = height
         self.width = 1
 
-        self.map_entity_type = CollisionMap.MapEntity.PADDLE
+        self.x = self.new_x = x
+        self.y = self.new_y = (self.max_y - self.height) // 2
+
+        self.entity_id = PongEntityID.PADDLE
 
         self.update_map(game.collision_map)
 
@@ -43,9 +52,9 @@ class Paddle(GameEntity, Collidable):
     def update_map(self, collision_map: CollisionMap) -> None:
         """Update the collision map."""
         for i in range(self.height):
-            collision_map.map[self.y + i][self.x] = collision_map.MapEntity.EMPTY
+            collision_map.map[self.y + i][self.x] = PongEntityID.EMPTY
         for i in range(self.height):
-            collision_map.map[self.new_y + i][self.new_x] = self.map_entity_type
+            collision_map.map[self.new_y + i][self.new_x] = self.entity_id
         self.y = self.new_y
 
     class Direction(Enum):
@@ -61,15 +70,15 @@ class Paddle(GameEntity, Collidable):
         collision = game.collision_map.check_collision(self)
 
         if collision in (
-            {game.collision_map.MapEntity.EMPTY, game.collision_map.MapEntity.PADDLE},
-            {game.collision_map.MapEntity.EMPTY},
+            {PongEntityID.EMPTY, PongEntityID.PADDLE},
+            {PongEntityID.EMPTY},
             # this allows the paddle to clip the ball
-            {game.collision_map.MapEntity.BALL, game.collision_map.MapEntity.PADDLE},
+            {PongEntityID.BALL, PongEntityID.PADDLE},
         ):
             self.update_map(game.collision_map)
             return
 
-        if collision in ({game.collision_map.MapEntity.BOTTOM_WALL}, {game.collision_map.MapEntity.TOP_WALL}):
+        if collision in ({PongEntityID.BOTTOM_WALL}, {PongEntityID.TOP_WALL}):
             return
 
         raise CollisionError(collision)
@@ -102,7 +111,7 @@ class Ball(GameEntity, Collidable):
         self.width = 1
         self.height = 1
 
-        self.map_entity_type = CollisionMap.MapEntity.BALL
+        self.entity_id = PongEntityID.BALL
 
         self.reset(game)
 
@@ -112,10 +121,10 @@ class Ball(GameEntity, Collidable):
 
     def update_map(self, collision_map: CollisionMap) -> None:
         """Update the collision map."""
-        collision_map.map[self.y][self.x] = collision_map.MapEntity.EMPTY
+        collision_map.map[self.y][self.x] = PongEntityID.EMPTY
         self.x = self.new_x
         self.y = self.new_y
-        collision_map.map[self.new_y][self.new_x] = self.map_entity_type
+        collision_map.map[self.new_y][self.new_x] = self.entity_id
 
     def reset(self, game: Pong) -> None:
         """Reset ball to center with random direction."""
@@ -134,25 +143,25 @@ class Ball(GameEntity, Collidable):
 
         collision = game.collision_map.check_collision(self)
 
-        if collision == {game.collision_map.MapEntity.EMPTY}:
+        if collision == {PongEntityID.EMPTY}:
             self.update_map(game.collision_map)
             return
 
-        if collision in ({game.collision_map.MapEntity.BOTTOM_WALL}, {game.collision_map.MapEntity.TOP_WALL}):
+        if collision in ({PongEntityID.BOTTOM_WALL}, {PongEntityID.TOP_WALL}):
             self.y_direction *= -1
             return
 
-        if collision == {game.collision_map.MapEntity.PADDLE}:
+        if collision == {PongEntityID.PADDLE}:
             self.x_direction *= -1
 
             return
 
-        if collision == {game.collision_map.MapEntity.LEFT_WALL}:
+        if collision == {PongEntityID.LEFT_WALL}:
             game.score.player_1_score += 1
             self.reset(game)
             return
 
-        if collision == {game.collision_map.MapEntity.RIGHT_WALL}:
+        if collision == {PongEntityID.RIGHT_WALL}:
             game.score.player_2_score += 1
             self.reset(game)
             return

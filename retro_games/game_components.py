@@ -5,7 +5,6 @@ from __future__ import annotations
 import curses
 import logging
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -13,22 +12,20 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 
+class EntityID:
+    """An entity id."""
+
+    EMPTY = 0
+    TOP_WALL = 1
+    BOTTOM_WALL = 2
+    LEFT_WALL = 3
+    RIGHT_WALL = 4
+
+
 class CollisionMap:
     """A collision map."""
 
-    class MapEntity(Enum):
-        """A map entity."""
-
-        EMPTY = 0
-        PADDLE = 1
-        BALL = 2
-        BOARDER = 3
-        TOP_WALL = 4
-        BOTTOM_WALL = 5
-        LEFT_WALL = 6
-        RIGHT_WALL = 7
-
-    map: list[list[MapEntity]]
+    map: list[list[int]]
 
     def __init__(self, max_y: int, max_x: int) -> None:
         """Init."""
@@ -41,25 +38,25 @@ class CollisionMap:
         logging.info(f"{len(self.map)=}")
         logging.info(f"{len(self.map[0])=}")
 
-    def create_collision_map(self) -> list[list[MapEntity]]:
+    def create_collision_map(self) -> list[list[int]]:
         """Create a collision map for the game.
 
         Returns:
             A list of lists representing the collision map.
         """
-        return [[self.MapEntity.EMPTY for _ in range(self.max_x)] for _ in range(self.max_y)]
+        return [[EntityID.EMPTY for _ in range(self.max_x)] for _ in range(self.max_y)]
 
-    def check_collision(self, entity: Collidable) -> set[MapEntity]:
+    def check_collision(self, entity: Collidable) -> set[int]:
         """Check if the object collides with the collision map."""
         if entity.new_x < 0 + 1:
-            return {self.MapEntity.LEFT_WALL}
+            return {EntityID.LEFT_WALL}
         if entity.new_x >= self.max_x + 1 - entity.width:
-            return {self.MapEntity.RIGHT_WALL}
+            return {EntityID.RIGHT_WALL}
         if entity.new_y < 0 + 1:
-            return {self.MapEntity.TOP_WALL}
+            return {EntityID.TOP_WALL}
         if entity.new_y >= self.max_y - entity.height:
-            return {self.MapEntity.BOTTOM_WALL}
-        all_collisions: set[CollisionMap.MapEntity] = set()
+            return {EntityID.BOTTOM_WALL}
+        all_collisions: set[int] = set()
         for i in range(entity.height):
             part = self.map[entity.new_y + i][entity.new_x : entity.new_x + entity.width]
             all_collisions.update(part)
@@ -75,7 +72,7 @@ class Collidable(ABC):
     height: int
     new_x: int
     new_y: int
-    map_entity_type: CollisionMap.MapEntity
+    entity_id: int
 
     @abstractmethod
     def update_map(self, collision_map: CollisionMap) -> None:
