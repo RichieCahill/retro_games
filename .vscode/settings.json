@@ -2,6 +2,7 @@
   "cSpell.words": [
     "addopts",
     "celerybeat",
+    "Collidable",
     "Connor",
     "cython",
     "Cython",
@@ -11,6 +12,7 @@
     "ignorelist",
     "ipynb",
     "ipython",
+    "levelname",
     "mkdocs",
     "mypy",
     "nosetests",

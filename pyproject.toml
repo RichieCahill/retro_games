@@ -20,7 +20,7 @@ ruff = "*"
 types-requests = "*"
 
 [tool.poetry.scripts]
-retro_games = "retro_games:main"
+retro_games = "retro_games.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]
@@ -54,7 +54,7 @@ builtins-ignorelist = ["id"]
 max-args = 9
 
 [tool.coverage.run]
-source = ["system_tools"]
+source = ["retro_games"]
 
 [tool.coverage.report]
 exclude_lines = [
