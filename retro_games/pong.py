@@ -54,23 +54,24 @@ class Paddle(GameEntity, Collidable):
         UP = -1
         DOWN = 1
 
-    def move(self, collision_map: CollisionMap, direction: Direction) -> None:
+    def move(self, game: Pong, direction: Direction) -> None:
         """Move the ball and handle wall collisions."""
         self.new_y = self.y + direction.value
 
-        collision = collision_map.check_collision(self)
+        collision = game.collision_map.check_collision(self)
 
         if collision in (
-            {collision_map.MapEntity.EMPTY, collision_map.MapEntity.PADDLE},
-            {collision_map.MapEntity.EMPTY},
+            {game.collision_map.MapEntity.EMPTY, game.collision_map.MapEntity.PADDLE},
+            {game.collision_map.MapEntity.EMPTY},
+            # this allows the paddle to clip the ball
+            {game.collision_map.MapEntity.BALL, game.collision_map.MapEntity.PADDLE},
         ):
-            self.update_map(collision_map)
+            self.update_map(game.collision_map)
             return
 
-        if collision in ({collision_map.MapEntity.BOTTOM_WALL}, {collision_map.MapEntity.TOP_WALL}):
+        if collision in ({game.collision_map.MapEntity.BOTTOM_WALL}, {game.collision_map.MapEntity.TOP_WALL}):
             return
 
-        error = f"Unexpected collision: {collision}"
         raise CollisionError(collision)
 
 
@@ -182,10 +183,10 @@ class Pong(Game):
         self.entities = [self.left_paddle, self.right_paddle, self.ball, self.score]
 
         self.key_map = {
-            ord("w"): (self.left_paddle.move, (self.collision_map, Paddle.Direction.UP)),
-            ord("s"): (self.left_paddle.move, (self.collision_map, Paddle.Direction.DOWN)),
-            ord("i"): (self.right_paddle.move, (self.collision_map, Paddle.Direction.UP)),
-            ord("k"): (self.right_paddle.move, (self.collision_map, Paddle.Direction.DOWN)),
+            ord("w"): (self.left_paddle.move, (self, Paddle.Direction.UP)),
+            ord("s"): (self.left_paddle.move, (self, Paddle.Direction.DOWN)),
+            ord("i"): (self.right_paddle.move, (self, Paddle.Direction.UP)),
+            ord("k"): (self.right_paddle.move, (self, Paddle.Direction.DOWN)),
             ord("q"): (lambda: 1, ()),
         }
         # Create renderer
