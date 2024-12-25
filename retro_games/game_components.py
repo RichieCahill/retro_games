@@ -82,6 +82,10 @@ class Collidable(ABC):
         """Update the collision map."""
 
 
+class CollisionError(Exception):
+    """A collision error."""
+
+
 class GameEntity(ABC):
     """A game entity."""
 

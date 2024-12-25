@@ -8,7 +8,14 @@ import time
 from enum import Enum
 from random import choice
 
-from retro_games.game_components import Collidable, CollisionMap, Game, GameEntity, Renderer
+from retro_games.game_components import (
+    Collidable,
+    CollisionError,
+    CollisionMap,
+    Game,
+    GameEntity,
+    Renderer,
+)
 
 
 class Paddle(GameEntity, Collidable):
@@ -60,7 +67,7 @@ class Paddle(GameEntity, Collidable):
             return
 
         error = f"Unexpected collision: {collision}"
-        raise ValueError(error)
+        raise CollisionError(collision)
 
 
 class Score(GameEntity):
@@ -144,8 +151,7 @@ class Ball(GameEntity, Collidable):
             self.reset()
             return collision_map, score
 
-        error = f"Unexpected collision: {collision}"
-        raise ValueError(error)
+        raise CollisionError(collision)
 
     def check_scoring(self) -> tuple[int, int]:
         """Check if ball has passed paddles and return scoring info."""
