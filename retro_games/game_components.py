@@ -5,6 +5,7 @@ from __future__ import annotations
 import curses
 import logging
 from abc import ABC, abstractmethod
+from collections import Counter
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -20,6 +21,23 @@ class EntityID:
     BOTTOM_WALL = 2
     LEFT_WALL = 3
     RIGHT_WALL = 4
+
+    def check_entity_id_uniqueness(self) -> None:
+        """Ensure entity id is unique."""
+        attributes = {
+            attr: getattr(self, attr)
+            for attr in dir(self)
+            if not callable(getattr(self, attr)) and not attr.startswith("__")
+        }
+
+        duplicate = [k for k, v in Counter(attributes.values()).items() if v > 1]
+        if duplicate:
+            error = "Duplicate values: \n"
+            for attribute, value in attributes.items():
+                if value in duplicate:
+                    error += f"{attribute=}, {value=}\n"
+
+            raise ValueError(error)
 
 
 class CollisionMap:
@@ -107,10 +125,12 @@ class Game:
     entities: list[GameEntity]
     collision_map: CollisionMap
 
-    def __init__(self, max_y: int, max_x: int) -> None:
+    def __init__(self, max_y: int, max_x: int, entity_id: EntityID) -> None:
         """Init."""
         self.max_y = max_y
         self.max_x = max_x
+
+        entity_id.check_entity_id_uniqueness()
 
         self.collision_map = CollisionMap(max_y, max_x)
 

@@ -177,7 +177,7 @@ class Pong(Game):
         self.screen = screen
         self.max_y, self.max_x = screen.getmaxyx()
 
-        super().__init__(self.max_y, self.max_x - 2)
+        super().__init__(self.max_y, self.max_x - 2, PongEntityID())
 
         logging.info(f"{self.max_y=}, {self.max_x=}")
         logging.info(f"{len(self.collision_map.map)=}")
